@@ -3047,17 +3047,17 @@ document.addEventListener('click', (e) => {
       `⛔ <strong>Access denied.</strong><br>` +
       `<em>${domain}</em> accounts are not permitted to access this dashboard.<br>` +
       `Please sign in with a <strong>@firstbase.com</strong> or <strong>@appdirect.com</strong> Google account.<br><br>` +
-      `<button onclick="window.__clerkInstance.signOut().then(()=>location.reload())" ` +
+      `<button onclick="window.Clerk.signOut().then(()=>location.reload())" ` +
       `style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 22px;` +
       `font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">` +
       `Sign out &amp; try again</button>`;
   }
 
-  // ── 3. Boot Clerk ────────────────────────────────────────────────
+  // ── 3. Boot Clerk (v5 API: key passed into load()) ───────────────
   try {
-    const clerk = new window.Clerk(CLERK_PUBLISHABLE_KEY);
+    const clerk = window.Clerk;
     window.__clerkInstance = clerk;
-    await clerk.load();
+    await clerk.load({ publishableKey: CLERK_PUBLISHABLE_KEY });
 
     function showApp() {
       gate.style.display = 'none';
