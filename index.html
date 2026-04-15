@@ -3072,7 +3072,13 @@ document.addEventListener('click', (e) => {
 
   } catch (err) {
     console.error('Clerk init error:', err);
-    loadingEl.textContent = '⚠️ Login failed to initialise. Check your publishable key and try again.';
+    loadingEl.style.cssText = 'display:block;max-width:400px;text-align:center;line-height:1.7;font-family:Plus Jakarta Sans,sans-serif;font-size:13px';
+    loadingEl.innerHTML =
+      '⚠️ Sign-in failed to load.<br>' +
+      '<button onclick="location.reload()" ' +
+      'style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;' +
+      'padding:10px 22px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer">' +
+      'Retry</button>';
   }
 }());
 </script>
