@@ -8,7 +8,8 @@
 <!-- ── CLERK SSO ──────────────────────────────────────────────────── -->
 <!-- Replace YOUR_CLERK_PUBLISHABLE_KEY with your key from clerk.com  -->
 <script>const CLERK_PUBLISHABLE_KEY = 'pk_live_Y2xlcmsuYWRpbDg2NjgxLmdpdGh1Yi5pbyQ';</script>
-<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" crossorigin="anonymous"></script>
+<!-- Clerk script is injected dynamically at bottom of body so the   -->
+<!-- publishable key can be passed via data-clerk-publishable-key     -->
 <!-- ──────────────────────────────────────────────────────────────── -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -2999,7 +3000,7 @@ document.addEventListener('click', (e) => {
 
 <!-- ── CLERK SSO INITIALISATION ─────────────────────────────────── -->
 <script>
-(async () => {
+(function () {
   const gate      = document.getElementById('clerk-gate');
   const loadingEl = document.getElementById('clerk-loading');
   const signInEl  = document.getElementById('clerk-sign-in-mount');
@@ -3026,7 +3027,7 @@ document.addEventListener('click', (e) => {
   const ALLOWED_DOMAINS = ['firstbase.com', 'appdirect.com'];
 
   function getEmailDomain(user) {
-    const email = user?.primaryEmailAddress?.emailAddress || '';
+    const email = (user && user.primaryEmailAddress && user.primaryEmailAddress.emailAddress) || '';
     return email.split('@')[1] || '';
   }
 
@@ -3044,70 +3045,83 @@ document.addEventListener('click', (e) => {
     loadingEl.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
     loadingEl.style.fontSize = '13px';
     loadingEl.innerHTML =
-      `⛔ <strong>Access denied.</strong><br>` +
-      `<em>${domain}</em> accounts are not permitted to access this dashboard.<br>` +
-      `Please sign in with a <strong>@firstbase.com</strong> or <strong>@appdirect.com</strong> Google account.<br><br>` +
-      `<button onclick="window.Clerk.signOut().then(()=>location.reload())" ` +
-      `style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 22px;` +
-      `font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">` +
-      `Sign out &amp; try again</button>`;
+      '⛔ <strong>Access denied.</strong><br>' +
+      '<em>' + domain + '</em> accounts are not permitted to access this dashboard.<br>' +
+      'Please sign in with a <strong>@firstbase.com</strong> or <strong>@appdirect.com</strong> Google account.<br><br>' +
+      '<button onclick="window.__clerk.signOut().then(()=>location.reload())" ' +
+      'style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 22px;' +
+      'font-family:\'Syne\',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">' +
+      'Sign out &amp; try again</button>';
   }
 
-  // ── 3. Boot Clerk (v5 API: key passed into load()) ───────────────
-  try {
-    const clerk = window.Clerk;
-    window.__clerkInstance = clerk;
-    await clerk.load({ publishableKey: CLERK_PUBLISHABLE_KEY });
+  function showApp(clerk) {
+    gate.style.display = 'none';
+    mainApp.style.display = '';
+    userBar.classList.add('visible');
+    clerk.mountUserButton(userEl, {
+      appearance: { elements: { userButtonAvatarBox: { width: '32px', height: '32px' } } }
+    });
+  }
 
-    function showApp() {
-      gate.style.display = 'none';
-      mainApp.style.display = '';
-      userBar.classList.add('visible');
-      clerk.mountUserButton(userEl, {
+  // ── 3. Dynamically inject Clerk script with key as data attribute ─
+  // (Clerk v5 requires the publishable key on the script tag itself)
+  const script = document.createElement('script');
+  script.setAttribute('data-clerk-publishable-key', CLERK_PUBLISHABLE_KEY);
+  script.src = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js';
+  script.crossOrigin = 'anonymous';
+  script.async = true;
+
+  script.onerror = function () {
+    loadingEl.textContent = '⚠️ Failed to load Clerk. Check your internet connection and try again.';
+  };
+
+  script.onload = async function () {
+    try {
+      const clerk = window.Clerk;
+      window.__clerk = clerk;
+      await clerk.load();
+
+      // ── 4. Already signed in? ────────────────────────────────────
+      if (clerk.user) {
+        if (isDomainAllowed(clerk.user)) {
+          showApp(clerk);
+        } else {
+          showDomainError(clerk.user);
+        }
+        return;
+      }
+
+      // ── 5. Show Google sign-in component ────────────────────────
+      loadingEl.style.display = 'none';
+      clerk.mountSignIn(signInEl, {
         appearance: {
-          elements: { userButtonAvatarBox: { width: '32px', height: '32px' } }
+          elements: {
+            rootBox: { width: '100%' },
+            card:    { boxShadow: '0 4px 24px rgba(0,0,0,0.08)', borderRadius: '14px' },
+          }
+        },
+        socialButtonsVariant: 'blockButton',
+      });
+
+      // ── 6. Listen for sign-in, enforce domain ───────────────────
+      clerk.addListener(function (resources) {
+        const user = resources.user;
+        if (!user) return;
+        if (isDomainAllowed(user)) {
+          showApp(clerk);
+        } else {
+          showDomainError(user);
         }
       });
+
+    } catch (err) {
+      console.error('Clerk init error:', err);
+      loadingEl.textContent = '⚠️ Login failed to initialise. Check your publishable key and try again.';
     }
+  };
 
-    // ── 4. Already signed in? ──────────────────────────────────────
-    if (clerk.user) {
-      if (isDomainAllowed(clerk.user)) {
-        showApp();
-      } else {
-        showDomainError(clerk.user);
-      }
-      return;
-    }
-
-    // ── 5. Show sign-in component (Google SSO) ─────────────────────
-    loadingEl.style.display = 'none';
-    clerk.mountSignIn(signInEl, {
-      appearance: {
-        elements: {
-          rootBox:   { width: '100%' },
-          card:      { boxShadow: '0 4px 24px rgba(0,0,0,0.08)', borderRadius: '14px' },
-          socialButtonsBlockButton__google: { order: -1 }
-        }
-      },
-      socialButtonsVariant: 'blockButton',
-    });
-
-    // ── 6. Listen for successful sign-in, enforce domain ──────────
-    clerk.addListener(({ user }) => {
-      if (!user) return;
-      if (isDomainAllowed(user)) {
-        showApp();
-      } else {
-        showDomainError(user);
-      }
-    });
-
-  } catch (err) {
-    console.error('Clerk init error:', err);
-    loadingEl.textContent = '⚠️ Login failed to initialise. Check your publishable key and try again.';
-  }
-})();
+  document.head.appendChild(script);
+}());
 </script>
 <!-- ──────────────────────────────────────────────────────────────── -->
 </body>
