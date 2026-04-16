@@ -1378,7 +1378,7 @@
     <!-- Add New Product Form -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-title">Add New Product</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 100px 100px auto;gap:10px;align-items:end;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 100px 100px 70px 70px 70px 100px auto;gap:10px;align-items:end;">
         <div>
           <label style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;">Item Name <span style="color:var(--warn)">*</span></label>
           <input type="text" id="np-name" placeholder="e.g. Dell XPS 15" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:9px 10px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
@@ -1398,6 +1398,22 @@
         <div>
           <label style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;">Weight (lbs)</label>
           <input type="number" id="np-weight" placeholder="0" min="0" step="0.1" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:9px 10px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;">L (in)</label>
+          <input type="number" id="np-l" placeholder="0" min="0" step="0.1" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:9px 10px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;">W (in)</label>
+          <input type="number" id="np-w" placeholder="0" min="0" step="0.1" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:9px 10px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;">H (in)</label>
+          <input type="number" id="np-h" placeholder="0" min="0" step="0.1" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:9px 10px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;">Weight (Kgs)</label>
+          <input type="number" id="np-weightkg" placeholder="0" min="0" step="0.1" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:9px 10px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
         </div>
         <div style="padding-bottom:1px">
           <button onclick="addNewProduct()" style="background:var(--accent);color:#ffffff;border:none;border-radius:8px;padding:9px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">+ Add Product</button>
@@ -1428,6 +1444,10 @@
             <th style="text-align:left;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);">Origin</th>
             <th style="text-align:right;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);">Value</th>
             <th style="text-align:right;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);">Weight (lbs)</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);">L (in)</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);">W (in)</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);">H (in)</th>
+            <th style="text-align:right;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);">Weight (Kgs)</th>
             <th style="text-align:center;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);">Source</th>
             <th style="padding:10px 14px;border-bottom:1px solid var(--border);"></th>
           </tr>
@@ -2256,6 +2276,10 @@ async function loadProducts() {
       origin:   r['Origin'] || '',
       value:    r['Value (USD)'] || '0',
       weight:   r['Weight (lbs)'] || '0',
+      l:        r['L'] || '',
+      w:        r['W'] || '',
+      h:        r['H'] || '',
+      weightKg: r['Weight (Kgs)'] || '',
       custom:   false
     }));
   } catch(e) { console.error('loadProducts error:', e); }
@@ -2450,6 +2474,10 @@ async function addNewProduct() {
   const origin   = document.getElementById('np-origin').value.trim();
   const value    = document.getElementById('np-value').value.trim();
   const weight   = document.getElementById('np-weight').value.trim();
+  const l        = document.getElementById('np-l').value.trim();
+  const w        = document.getElementById('np-w').value.trim();
+  const h        = document.getElementById('np-h').value.trim();
+  const weightKg = document.getElementById('np-weightkg').value.trim();
   if (!name) { errEl.textContent = 'Item Name is required.'; errEl.style.display='block'; return; }
   if (getAllProducts().find(p => p.name.toLowerCase() === name.toLowerCase())) {
     errEl.textContent = 'A product with this name already exists.'; errEl.style.display='block'; return;
@@ -2458,13 +2486,13 @@ async function addNewProduct() {
   const addBtn = document.getElementById('np-add-btn');
   if (addBtn) { addBtn.disabled = true; addBtn.textContent = 'Saving…'; }
 
-  const res = await gasPost({ action:'addProduct', product:{ name, category, origin, value: value||'0', weight: weight||'0' } });
+  const res = await gasPost({ action:'addProduct', product:{ name, category, origin, value: value||'0', weight: weight||'0', l: l||'', w: w||'', h: h||'', weightKg: weightKg||'' } });
 
   if (addBtn) { addBtn.disabled = false; addBtn.textContent = 'Add Product'; }
 
   if (res && res.success) {
-    allProducts.push({ name, category, origin, value: value||'0', weight: weight||'0', custom: true });
-    ['np-name','np-category','np-origin','np-value','np-weight'].forEach(id => document.getElementById(id).value = '');
+    allProducts.push({ name, category, origin, value: value||'0', weight: weight||'0', l: l||'', w: w||'', h: h||'', weightKg: weightKg||'', custom: true });
+    ['np-name','np-category','np-origin','np-value','np-weight','np-l','np-w','np-h','np-weightkg'].forEach(id => document.getElementById(id).value = '');
     renderProductTable();
     refreshAllDataLists();
   } else {
@@ -2506,7 +2534,7 @@ function renderProductTable() {
 
   const tbody = document.getElementById('product-tbody');
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px;">No products found</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px;">No products found</td></tr>`;
     return;
   }
 
@@ -2519,6 +2547,10 @@ function renderProductTable() {
       <td style="padding:9px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${p.origin||'—'}</td>
       <td style="padding:9px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);text-align:right;">${p.value?'$'+parseFloat(p.value).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</td>
       <td style="padding:9px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:right;">${p.weight||'—'} lbs</td>
+      <td style="padding:9px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:right;">${p.l||'—'}</td>
+      <td style="padding:9px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:right;">${p.w||'—'}</td>
+      <td style="padding:9px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:right;">${p.h||'—'}</td>
+      <td style="padding:9px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:right;">${p.weightKg||'—'}</td>
       <td style="padding:9px 14px;text-align:center;">
         ${p.custom
           ? `<span style="background:rgba(37,99,235,0.08);color:var(--accent);border:1px solid rgba(37,99,235,0.18);border-radius:4px;padding:2px 7px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.05em;">CUSTOM</span>`
