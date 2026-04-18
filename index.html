@@ -1568,11 +1568,26 @@
     <div class="form-grid">
       <div class="field">
         <label>Origin Warehouse</label>
-        <input type="text" id="cq-warehouse" placeholder="e.g. US (Salt Lake City)" oninput="calculateQuote()" />
+        <select id="cq-warehouse" onchange="onQuoteWarehouseChange()">
+          <option value="">— Select warehouse —</option>
+          <option value="us">🇺🇸 US (Salt Lake City)</option>
+          <option value="de">🇩🇪 Germany (EU)</option>
+          <option value="de_ret">🇩🇪 Germany - Returns</option>
+          <option value="sg">🇸🇬 Singapore</option>
+        </select>
       </div>
       <div class="field">
         <label>Destination Country</label>
-        <input type="text" id="cq-country" placeholder="e.g. Germany" oninput="calculateQuote()" />
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="cq-country" onchange="calculateQuote()" style="flex:1">
+            <option value="">— Select origin first —</option>
+          </select>
+          <button onclick="openAddCountry()" title="Add new destination country" style="flex-shrink:0;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:0 14px;height:42px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='var(--accent)'">+ Add Country</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Product Type</label>
+        <input type="text" id="cq-product" placeholder="e.g. Laptops, Monitors, Accessories" oninput="calculateQuote()" />
       </div>
       <div class="field">
         <label>Currency</label>
@@ -1636,6 +1651,7 @@
         <div id="cq-reference-display" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-top:3px;"></div>
       </div>
       <div class="breakdown">
+        <div class="breakdown-row" id="cq-r-product-row" style="display:none"><span class="breakdown-label">Product Type</span><span class="breakdown-value" id="cq-r-product">—</span></div>
         <div class="breakdown-row"><span class="breakdown-label">Declared Value per Unit</span><span class="breakdown-value" id="cq-r-value">—</span></div>
         <div class="breakdown-row"><span class="breakdown-label">Quantity</span><span class="breakdown-value" id="cq-r-qty">—</span></div>
         <div class="breakdown-row"><span class="breakdown-label">Total Declared Value</span><span class="breakdown-value" id="cq-r-total-value">—</span></div>
@@ -3335,8 +3351,21 @@ function fmtQuoteVal(amt, cur) {
   return s + (amt || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + cur;
 }
 
+const CQ_WAREHOUSE_LABELS = {
+  us:     'US (Salt Lake City)',
+  de:     'Germany (EU)',
+  de_ret: 'Germany - Returns',
+  sg:     'Singapore'
+};
+
 function onQuoteWarehouseChange() {
-  // Kept for backward compatibility with switchTab; just recompute the preview.
+  const wh = document.getElementById('cq-warehouse').value;
+  const cs = document.getElementById('cq-country');
+  cs.innerHTML = wh && rates[wh] ? '<option value="">— Select destination —</option>' : '<option value="">— Select origin first —</option>';
+  if (wh && rates[wh]) {
+    const all = Object.keys(rates[wh].countries).sort();
+    all.forEach(c => { const o = document.createElement('option'); o.value = o.textContent = c; cs.appendChild(o); });
+  }
   calculateQuote();
 }
 
@@ -3352,6 +3381,7 @@ function calculateQuote() {
 
   const client = (document.getElementById('cq-client').value || '').trim();
   const ref    = (document.getElementById('cq-reference').value || '').trim();
+  const product = (document.getElementById('cq-product').value || '').trim();
   const val    = parseFloat(document.getElementById('cq-value').value) || 0;
   const qty    = Math.max(1, parseInt(document.getElementById('cq-quantity').value) || 1);
   const duty   = parseFloat(document.getElementById('cq-duty').value) || 0;
@@ -3374,6 +3404,15 @@ function calculateQuote() {
     refEl.style.display = ref ? 'block' : 'none';
   } else {
     clientSummary.style.display = 'none';
+  }
+
+  // Product type row (only shown when supplied)
+  const prodRow = document.getElementById('cq-r-product-row');
+  if (product) {
+    prodRow.style.display = 'flex';
+    document.getElementById('cq-r-product').textContent = product;
+  } else {
+    prodRow.style.display = 'none';
   }
 
   // Populate breakdown
@@ -3406,7 +3445,9 @@ function generateCreateQuotePDF() {
 
   const client  = (document.getElementById('cq-client').value || '').trim();
   const ref     = (document.getElementById('cq-reference').value || '').trim();
-  const whLabel = (document.getElementById('cq-warehouse').value || '').trim();
+  const product = (document.getElementById('cq-product').value || '').trim();
+  const whCode  = document.getElementById('cq-warehouse').value || '';
+  const whLabel = CQ_WAREHOUSE_LABELS[whCode] || whCode;
   const country = (document.getElementById('cq-country').value || '').trim();
   const val     = parseFloat(document.getElementById('cq-value').value) || 0;
   const qty     = Math.max(1, parseInt(document.getElementById('cq-quantity').value) || 1);
@@ -3478,29 +3519,35 @@ function generateCreateQuotePDF() {
   }
 
   // ── Shipment summary block (only if any provided) ───────────
-  if (whLabel || country || qty) {
+  if (whLabel || country || qty || product) {
     doc.setFillColor(248, 250, 252);
     doc.setDrawColor(226, 232, 240);
     doc.roundedRect(margin, y, contentW, 26, 3, 3, 'FD');
 
-    const col = contentW / 3;
+    // 4 columns when product is present, otherwise 3
+    const cols    = product ? 4 : 3;
+    const colW    = contentW / cols;
+    const labels  = product
+      ? ['ORIGIN WAREHOUSE', 'DESTINATION', 'PRODUCT TYPE', 'QUANTITY']
+      : ['ORIGIN WAREHOUSE', 'DESTINATION', 'QUANTITY'];
+    const values  = product
+      ? [whLabel || '—', country || '—', product, qty.toString()]
+      : [whLabel || '—', country || '—', qty.toString()];
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
     doc.setTextColor(100, 116, 139);
-    doc.text('ORIGIN WAREHOUSE', margin + 8, y + 8);
-    doc.text('DESTINATION', margin + col + 8, y + 8);
-    doc.text('QUANTITY', margin + col * 2 + 8, y + 8);
+    labels.forEach((lbl, i) => doc.text(lbl, margin + colW * i + 8, y + 8));
 
     doc.setDrawColor(226, 232, 240);
-    doc.line(margin + col, y + 2, margin + col, y + 24);
-    doc.line(margin + col * 2, y + 2, margin + col * 2, y + 24);
+    for (let i = 1; i < cols; i++) {
+      doc.line(margin + colW * i, y + 2, margin + colW * i, y + 24);
+    }
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
+    doc.setFontSize(cols === 4 ? 9 : 10);
     doc.setTextColor(15, 23, 42);
-    doc.text(whLabel || '—', margin + 8, y + 19);
-    doc.text(country || '—', margin + col + 8, y + 19);
-    doc.text(qty.toString(), margin + col * 2 + 8, y + 19);
+    values.forEach((v, i) => doc.text(String(v), margin + colW * i + 8, y + 19));
 
     y += 34;
   }
@@ -3515,20 +3562,24 @@ function generateCreateQuotePDF() {
   y += 4;
 
   // ── Cost table ───────────────────────────────────────────────
+  const pdfBody = [];
+  if (product) pdfBody.push(['Product Type', product]);
+  pdfBody.push(
+    ['Declared Value per Unit',        fmtQuoteVal(val, currency)],
+    ['Quantity',                       qty.toString()],
+    ['Total Declared Value',           fmtQuoteVal(totalVal, currency)],
+    ['Local Duties & Tax',             fmtQuote(duty, currency)],
+    ['IOR Minimum Fee',                fmtQuote(ior, currency)],
+    ['Fixed Cost - Freight & Brokerage', fmtQuote(fixed, currency)],
+    ['Subtotal Export Charges',        fmtQuote(subtotal, currency)],
+    ['Firstbase Service & Handling (8%)', fmtQuote(handling, currency)]
+  );
+
   doc.autoTable({
     startY: y,
     margin: { left: margin, right: margin },
     head: [['Description', 'Amount']],
-    body: [
-      ['Declared Value per Unit',        fmtQuoteVal(val, currency)],
-      ['Quantity',                       qty.toString()],
-      ['Total Declared Value',           fmtQuoteVal(totalVal, currency)],
-      ['Local Duties & Tax',             fmtQuote(duty, currency)],
-      ['IOR Minimum Fee',                fmtQuote(ior, currency)],
-      ['Fixed Cost - Freight & Brokerage', fmtQuote(fixed, currency)],
-      ['Subtotal Export Charges',        fmtQuote(subtotal, currency)],
-      ['Firstbase Service & Handling (8%)', fmtQuote(handling, currency)],
-    ],
+    body: pdfBody,
     foot: [['Total Quote to Customer', fmtQuote(total, currency)]],
     headStyles: {
       fillColor: [37, 99, 235],
