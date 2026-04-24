@@ -4143,13 +4143,13 @@ function generatePartnerRFQ() {
   emailPreview.style.display = 'block';
 
   // Build subject
+  const today      = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const originPart = originCountry || '[Origin]';
   const destPart   = destCountry   || '[Destination]';
   const prodPart   = product       || 'Shipment';
   const subject    = `Quote Request – ${originPart} > ${destPart} – ${today}`;
 
   // Build body
-  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const dimLine = (length && width && height)
     ? `${length}" (L) × ${width}" (W) × ${height}" (H)`
     : '[To be confirmed]';
