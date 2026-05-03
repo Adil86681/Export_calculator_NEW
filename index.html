@@ -2877,30 +2877,37 @@ function toggleBlockV2(id) {
   if (el) el.classList.toggle('open');
 }
 
-function deleteShipmentV2(num) {
+async function deleteShipmentV2(num) {
   if (!confirm('Delete Shipment #' + num + '? This cannot be undone.')) return;
+  const res = await gasPost({ action: 'deleteShipment', num: num });
+  if (!res || !res.success) {
+    alert('Delete failed: ' + (res && res.error ? res.error : 'check Apps Script URL'));
+    return;
+  }
   const idx = shipments.findIndex(s => s.num === num);
-  if (idx !== -1) {
-    shipments.splice(idx, 1);
-    populateRepo2Filters();
-    renderRepoV2();
-    // Also re-render v1 if it's been initialized
-    if (typeof repoInited !== 'undefined' && repoInited) {
-      repoInited = false;
-      initRepo();
-    }
+  if (idx !== -1) shipments.splice(idx, 1);
+  populateRepo2Filters();
+  renderRepoV2();
+  // Also re-render v1 if it's been initialized
+  if (typeof repoInited !== 'undefined' && repoInited) {
+    repoInited = false;
+    initRepo();
   }
 }
 
 
-function deleteShipment(num) {
+async function deleteShipment(num) {
   if (!confirm('Delete Shipment #' + num + '? This cannot be undone.')) return;
-  const idx = shipments.findIndex(s => s.num === num);
-  if (idx !== -1) {
-    shipments.splice(idx, 1);
-    repoInited = false;
-    initRepo();
+  const res = await gasPost({ action: 'deleteShipment', num: num });
+  if (!res || !res.success) {
+    alert('Delete failed: ' + (res && res.error ? res.error : 'check Apps Script URL'));
+    return;
   }
+  const idx = shipments.findIndex(s => s.num === num);
+  if (idx !== -1) shipments.splice(idx, 1);
+  repoInited = false;
+  initRepo();
+  if (document.getElementById('tab-repository-v2')) { populateRepo2Filters(); renderRepoV2(); }
 }
 
 function exportPDF(num) {
@@ -3724,26 +3731,30 @@ async function submitShipment() {
   const submitBtn = document.querySelector('.modal-submit');
 
   if (isEditing) {
-    // Update in-memory immediately — Apps Script sync is best-effort
-    const idx = shipments.findIndex(s => s.num === editingShipmentNum);
-    if (idx !== -1) shipments[idx] = newShipment;
-    editingShipmentNum = null;
-
-    // Try to persist to Google Sheets; silently continue if backend lacks the handler
+    // Persist to Google Sheets first; only update in-memory and close modal on success
     if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving…'; }
-    gasPost({ action: 'editShipment', shipment: newShipment }).catch(() => {});
+    const res = await gasPost({ action: 'editShipment', shipment: newShipment });
     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Save Changes'; }
 
-    // Re-render without re-fetching from Sheets (to preserve the in-memory edit)
-    repoInited = false;
-    repoLoaded = true; // keep true so initRepo() skips the fetch
-    initRepo();
-    if (document.getElementById('tab-repository-v2')) { populateRepo2Filters(); renderRepoV2(); }
-    closeAddShipment();
-    setTimeout(() => {
-      const el = document.getElementById('ship-' + shipNum);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 150);
+    if (res && res.success) {
+      const idx = shipments.findIndex(s => s.num === editingShipmentNum);
+      if (idx !== -1) shipments[idx] = newShipment;
+      editingShipmentNum = null;
+
+      // Re-render without re-fetching from Sheets (to preserve the in-memory edit)
+      repoInited = false;
+      repoLoaded = true; // keep true so initRepo() skips the fetch
+      initRepo();
+      if (document.getElementById('tab-repository-v2')) { populateRepo2Filters(); renderRepoV2(); }
+      closeAddShipment();
+      setTimeout(() => {
+        const el = document.getElementById('ship-' + shipNum);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+    } else {
+      errEl.textContent = 'Edit failed: ' + (res && res.error ? res.error : 'check Apps Script URL');
+      errEl.style.display = 'block';
+    }
   } else {
     // New shipment — post to Google Sheets via Apps Script
     if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving…'; }
