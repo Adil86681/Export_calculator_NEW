@@ -2781,6 +2781,17 @@ function renderBlockV2(s) {
   const e = escapeHtmlV2;
 
   const itemsFiltered = s.items.filter(i => i.item || i.country);
+
+  // Unique destination countries from line items
+  const countries = [...new Set(s.items.filter(i => i.country).map(i => i.country))];
+  const countriesHtml = countries.length
+    ? `<span style="font-family:'DM Mono',monospace;font-size:11px;color:#7c3aed;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);border-radius:4px;padding:2px 8px;white-space:nowrap;">🌍 ${e(countries.join(', '))}</span>`
+    : '';
+  // Delivery date or pending badge
+  const deliveryHtml = s.delivery
+    ? `<span style="font-family:'DM Mono',monospace;font-size:11px;color:#047857;background:#d1fae5;border:1px solid #6ee7b7;border-radius:4px;padding:2px 8px;white-space:nowrap;">✅ ${e(s.delivery)}</span>`
+    : `<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;white-space:nowrap;">⏳ Delivery Pending</span>`;
+
   const itemRowsHtml = itemsFiltered.map(i => `
     <div class="inv-items-row">
       <div><span class="inv-country">${e(i.country)}</span></div>
@@ -2801,6 +2812,8 @@ function renderBlockV2(s) {
         <span class="sh2-num">#${s.num}</span>
         <span class="sh2-client">${e(s.client)}</span>
         ${s.orderId ? `<span class="sh2-order">${e(s.orderId)}</span>` : ''}
+        ${countriesHtml}
+        ${deliveryHtml}
       </div>
       <div class="sh2-right">
         <span class="sh2-quote">${e(s.quote)}</span>
