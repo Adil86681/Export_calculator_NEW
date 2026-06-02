@@ -1968,6 +1968,7 @@
           <option value="mouseandbear">Mouse &amp; Bear</option>
           <option value="iordirect">IOR Direct</option>
           <option value="truelog">Truelog</option>
+          <option value="custom">Custom</option>
         </select>
       </div>
     </div>
@@ -2026,7 +2027,7 @@
     <div style="margin-bottom:12px;">
       <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:start;font-size:13px;margin-bottom:14px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.12);border-radius:8px;padding:12px 14px;">
         <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);padding-top:1px;">To:</span>
-        <span id="rfq-email-to" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);word-break:break-all;"></span>
+        <span id="rfq-email-to" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);word-break:break-all;"></span><input id="rfq-email-to-input" type="text" placeholder="Enter recipient email(s)" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;outline:none;display:none;width:100%;" oninput="document.getElementById('rfq-email-to').textContent=this.value" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
         <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);padding-top:1px;">Subject:</span>
         <span id="rfq-email-subject" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text);"></span>
       </div>
@@ -4556,6 +4557,11 @@ const PARTNERS = {
     name: 'Truelog',
     to: 'jay@truelog.solutions',
     greeting: 'Hi Jay,'
+  },
+  custom: {
+    name: 'Custom',
+    to: '',
+    greeting: 'Hi,'
   }
 };
 
@@ -4772,12 +4778,19 @@ function generatePartnerRFQ() {
     '  4. Estimated transit time\n' +
     '  5. Any additional import requirements for ' + (destCountry || 'the destination country') + '\n\n' +
     'Please let us know if you need any further information to prepare the quote.\n\n' +
-    'Thank you,\n' +
-    'Adil Khan\n' +
-    'Export Services – Firstbase\n' +
-    'exports@firstbase.io';
+    'Thank you,';
 
   document.getElementById('rfq-email-to').textContent      = partner.to;
+  var toSpan = document.getElementById('rfq-email-to');
+  var toInput = document.getElementById('rfq-email-to-input');
+  if (partnerKey === 'custom') {
+    toSpan.style.display = 'none';
+    toInput.style.display = 'inline-block';
+    toInput.value = '';
+  } else {
+    toSpan.style.display = 'inline';
+    toInput.style.display = 'none';
+  }
   document.getElementById('rfq-email-subject').textContent  = subject;
   document.getElementById('rfq-email-body').value           = body;
 }
